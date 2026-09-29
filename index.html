@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neuland Labs Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#04080f;--panel:#0a1220;--border:#17233b;--accent:#f0a500;--text:#e8edf6;--muted:#8a94a6;--faint:#5a6577;--red:#ff5964;--green:#37d39b;--blue:#5aa9ff;--purple:#b48cff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.mono{font-family:"JetBrains Mono",monospace}
+header{padding:22px 16px 14px;max-width:1100px;margin:0 auto}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+h1{font-family:Syne,sans-serif;font-weight:800;font-size:28px;line-height:1.15;margin:6px 0 8px}
+h2{font-family:Syne,sans-serif;font-weight:700;font-size:21px;margin-bottom:4px}
+h3{font-family:Syne,sans-serif;font-weight:600;font-size:16px;margin-bottom:8px}
+.sub{color:var(--muted);font-size:14px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.badge{font-family:"JetBrains Mono",monospace;font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid var(--border);background:var(--panel)}
+.b-green{color:var(--green);border-color:rgba(55,211,155,.35)}
+.b-red{color:var(--red);border-color:rgba(255,89,100,.35)}
+.b-amber{color:var(--accent);border-color:rgba(240,165,0,.35)}
+.b-blue{color:var(--blue);border-color:rgba(90,169,255,.35)}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:1100px;margin:0 auto;padding:0 16px 16px}
+.kpi{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px}
+.kpi .l{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.kpi .v{font-family:"JetBrains Mono",monospace;font-size:20px;font-weight:600;margin-top:4px}
+.kpi .n{font-size:12px;color:var(--faint);margin-top:2px}
+@media(min-width:700px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1000px){.kpis{grid-template-columns:repeat(6,1fr)}}
+nav{position:sticky;top:0;z-index:20;background:rgba(4,8,15,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none;max-width:1100px;margin:0 auto;padding:0 8px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;background:none;border:none;color:var(--muted);font-family:"JetBrains Mono",monospace;font-size:12.5px;padding:14px 12px 12px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+@media(min-width:900px){.tabs{justify-content:center}.tab{padding:14px 16px 12px}}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+.panel{display:none}.panel.active{display:block}
+.phead{margin-bottom:14px}
+.grid{display:grid;gap:12px}
+@media(min-width:800px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.grid .card{margin-bottom:0}
+.grid{margin-bottom:12px}
+.card p+p{margin-top:8px}
+.card ul{padding-left:18px}.card li{margin:5px 0}
+.callout{border-left:3px solid var(--accent);background:rgba(240,165,0,.07);padding:12px 14px;border-radius:0 10px 10px 0;margin-bottom:12px;font-size:14.5px}
+.callout.red{border-color:var(--red);background:rgba(255,89,100,.07)}
+.callout.green{border-color:var(--green);background:rgba(55,211,155,.07)}
+.callout.blue{border-color:var(--blue);background:rgba(90,169,255,.07)}
+.tag{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10.5px;padding:2px 7px;border-radius:6px;margin-right:6px;vertical-align:middle}
+.t-g{background:rgba(55,211,155,.12);color:var(--green)}.t-r{background:rgba(255,89,100,.12);color:var(--red)}.t-b{background:rgba(90,169,255,.12);color:var(--blue)}.t-p{background:rgba(180,140,255,.12);color:var(--purple)}.t-a{background:rgba(240,165,0,.12);color:var(--accent)}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;min-width:640px;border-collapse:collapse;font-family:"JetBrains Mono",monospace;font-size:12.5px}
+table.narrow{min-width:420px}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+th{color:var(--muted);font-weight:400;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+th:first-child,td:first-child{text-align:left}
+td.pos{color:var(--green)}td.neg{color:var(--red)}
+tr.hl td{background:rgba(240,165,0,.06)}
+.cap{font-size:12px;color:var(--faint);margin-top:8px}
+.chartbox{position:relative;height:280px}
+.muted{color:var(--muted)}
+.quote{font-size:15px;font-style:italic;border-left:3px solid var(--purple);padding:4px 0 4px 12px;margin:4px 0}
+.quote span{display:block;font-style:normal;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);margin-top:6px}
+.split{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:10px 0 6px}
+.split div{height:100%}
+.ladder{display:flex;flex-direction:column;gap:6px}
+.rung{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#070e1a;font-family:"JetBrains Mono",monospace;font-size:13px}
+.rung.price{border-color:var(--accent);background:rgba(240,165,0,.1);color:var(--accent);font-weight:600}
+.rung .k{color:var(--muted);font-size:12px}
+.rung.price .k{color:var(--accent)}
+.score{display:grid;gap:10px}
+.srow{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px}
+.srow h3{margin-bottom:10px}
+.sgrid{display:grid;gap:10px}
+@media(min-width:700px){.sgrid{grid-template-columns:1fr 1fr}}
+.sgrid div{font-size:14px}
+.sgrid .lab{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+footer{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--faint);font-size:12px}
+</style>
+</head>
+<body>
+
+<nav><div class="tabs" id="tabs">
+  <button class="tab active" data-t="overview">Overview</button>
+  <button class="tab" data-t="business">Business</button>
+  <button class="tab" data-t="annual">Annual numbers</button>
+  <button class="tab" data-t="quarterly">Quarterly</button>
+  <button class="tab" data-t="growth">Growth &amp; capacity</button>
+  <button class="tab" data-t="risks">Risks &amp; catalysts</button>
+  <button class="tab" data-t="valuation">Valuation</button>
+  <button class="tab" data-t="chart">Price chart</button>
+</div></nav>
+
+<header>
+  <div class="eyebrow">Deep dive · Report view · Sep 2026</div>
+  <h1>Neuland Laboratories</h1>
+  <p class="sub">A drug-ingredient maker whose growth has bounced back strongly after FY25 — powered by manufacturing for innovator drug companies — but with earnings resting on a few molecules and a costly expansion phase ahead.</p>
+  <div class="badges">
+    <span class="badge b-green">Sharp FY26 rebound</span>
+    <span class="badge b-red">Few molecules drive CMS</span>
+    <span class="badge b-amber">Capex-heavy phase</span>
+    <span class="badge b-blue">Lumpy quarters</span>
+  </div>
+</header>
+
+<section class="kpis">
+  <div class="kpi"><div class="l">Share price</div><div class="v">₹21,435</div><div class="n">11.5% below 52-wk high</div></div>
+  <div class="kpi"><div class="l">FY26 revenue</div><div class="v">₹2,023 cr</div><div class="n">+37.0% vs FY25</div></div>
+  <div class="kpi"><div class="l">FY26 EBITDA margin</div><div class="v">28.4%</div><div class="n">Target: 25%+ long-term</div></div>
+  <div class="kpi"><div class="l">FY26 ROCE</div><div class="v">23.6%</div><div class="n">FY24: 30.1%</div></div>
+  <div class="kpi"><div class="l">P/E</div><div class="v">55.2x</div><div class="n">Industry 69.1x</div></div>
+  <div class="kpi"><div class="l">CMS projects</div><div class="v">98</div><div class="n">19 commercial (Q3 FY26)</div></div>
+</section>
+
+
+
+<main>
+
+<!-- OVERVIEW -->
+<section class="panel active" id="overview">
+  <div class="phead"><h2>The big picture</h2><p class="sub">What the report concludes, in one screen.</p></div>
+  <div class="callout">Growth has rebounded sharply after FY25, led by <b>commercial custom manufacturing</b> (making ingredients for drug companies' already-approved medicines) and strong margins. The counterweight: a small group of molecules drives much of that revenue, quarterly results swing a lot, and the company is entering a <b>capital-intensive expansion</b>.</div>
+  <div class="grid g2">
+    <div class="card"><h3><span class="tag t-g">Tailwinds</span></h3><ul>
+      <li>Revenue up 37.0% in FY26 to ₹2,023 cr; margin recovered to 28.4%.</li>
+      <li>Q1 FY27 revenue ₹642 cr, up 119.2% on the same quarter last year.</li>
+      <li>First commercial peptide module is now running (7,000 L).</li>
+      <li>One more commercial molecule expected in FY27, one or two in FY28.</li>
+      <li>Money tied up in day-to-day operations fell to 84 days of sales from 137 (working-capital days).</li>
+    </ul></div>
+    <div class="card"><h3><span class="tag t-r">Watch-outs</span></h3><ul>
+      <li>About three commercial molecules carry most custom-manufacturing revenue.</li>
+      <li>Orders don't arrive every quarter — Q1 FY26 margin was 11.8%, Q4 FY26 was 39.6%.</li>
+      <li>FY26 spending on plants (capex, ₹398 cr) exceeded cash generated; free cash flow was −₹50 cr.</li>
+      <li>Management warns return on capital (ROCE) may dip during expansion.</li>
+      <li>Valuation leaves shares sensitive to continued delivery.</li>
+    </ul></div>
+  </div>
+  <div class="card">
+    <div class="quote">"Q1FY27 is broadly in line with our expectations and represents a good start to the year."<span>Saharsh Davuluri, CEO &amp; MD · Aug 5, 2026</span></div>
+    <p class="muted" style="margin-top:10px;font-size:14px">Management called Q1 a good start — not a new baseline. It declined to give a precise annual revenue forecast; its growth aspiration is about 20% for FY27 and FY28.</p>
+  </div>
+</section>
+
+<!-- BUSINESS -->
+<section class="panel" id="business">
+  <div class="phead"><h2>Two engines</h2><p class="sub">What Neuland sells, and which part drives today's earnings.</p></div>
+  <div class="grid g2">
+    <div class="card"><h3><span class="tag t-b">GDS</span>Generic Drug Substances</h3>
+      <p>Neuland makes the active ingredients (APIs) that generic-drug companies put into their medicines — it does not make finished medicines.</p>
+      <ul>
+        <li><b>Prime APIs</b> — mature products, more exposed to competition.</li>
+        <li><b>Specialty APIs</b> — more complex, can be higher value.</li>
+      </ul>
+      <p class="muted">Role: gives breadth to the business.</p>
+    </div>
+    <div class="card"><h3><span class="tag t-a">CMS</span>Custom Manufacturing Solutions</h3>
+      <p>Neuland develops and manufactures ingredients for innovator (original-drug) companies, from clinical trials through to commercial supply.</p>
+      <ul>
+        <li>Development work can earn revenue before a drug is approved.</li>
+        <li>Commercial supply can recur once the customer's drug is on the market.</li>
+      </ul>
+      <p class="muted">Role: the largest growth driver. Management said more than half of revenue came from CMS/CDMO in Q2 FY26.</p>
+    </div>
+  </div>
+  <div class="card"><h3>CMS project pipeline (Q3 FY26)</h3>
+    <div class="split"><div style="width:19.4%;background:var(--accent)"></div><div style="width:80.6%;background:#1d2b45"></div></div>
+    <p class="mono" style="font-size:13px"><span style="color:var(--accent)">■ 19 commercial</span> &nbsp; <span class="muted">■ 79 at clinical and regulatory stages</span> &nbsp; · 98 total</p>
+    <p class="cap">Project count and stage are not the same as future revenue — clinical timelines and failures affect whether and when projects scale.</p>
+  </div>
+  <div class="callout red"><b>Concentration:</b> In Q1 FY27, most CMS revenue came from the top commercial products. Management described about three commercial molecules as active, with a healthy future over the next five to six years.</div>
+  <div class="grid g3">
+    <div class="card"><h3>Pipeline conversion</h3><p>One more commercial launch expected in FY27; one or possibly two in FY28. These are expectations, not realised revenue.</p></div>
+    <div class="card"><h3>New development work</h3><p>Two fairly advanced clinical projects entered in FY27 — management stressed they are not commercial. FY27 revenue from them was not quantified.</p></div>
+    <div class="card"><h3>Lumpiness</h3><p>Orders don't necessarily arrive every quarter and customer timing can shift. Management says current commercial performance is not a one-off.</p></div>
+  </div>
+  <div class="callout blue">Caution on revenue mix: the available segment-data rows date from 2004 and don't establish today's split between GDS and CMS.</div>
+</section>
+
+<!-- ANNUAL -->
+<section class="panel" id="annual">
+  <div class="phead"><h2>Annual trajectory, FY22–FY26</h2><p class="sub">Strong expansion to FY24, a dip in FY25, a rebound in FY26.</p></div>
+  <div class="card"><h3>Revenue &amp; operating profit (₹ cr) with margin (%)</h3><div class="chartbox"><canvas id="cAnnual"></canvas></div></div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>FY</th><th>Revenue</th><th>EBITDA</th><th>EBITDA margin</th><th>PAT</th><th>PAT margin</th><th>Borrowings / cash</th><th>Net debt / (cash)</th><th>FCF</th></tr></thead>
+    <tbody>
+      <tr><td>FY22</td><td>951</td><td>192</td><td>15.0%</td><td>64</td><td>6.7%</td><td>241 / 20</td><td>220</td><td class="neg">-37</td></tr>
+      <tr><td>FY23</td><td>1,191</td><td>325</td><td>22.8%</td><td>164</td><td>13.7%</td><td>128 / 59</td><td>69</td><td class="pos">173</td></tr>
+      <tr><td>FY24</td><td>1,559</td><td>522</td><td>29.7%</td><td>300</td><td>19.2%</td><td>95 / 117</td><td class="pos">(21)</td><td class="pos">119</td></tr>
+      <tr><td>FY25</td><td>1,477</td><td>389</td><td>21.9%</td><td>260</td><td>17.6%</td><td>157 / 259</td><td class="pos">(102)</td><td class="pos">112</td></tr>
+      <tr class="hl"><td>FY26</td><td>2,023</td><td>666</td><td>28.4%</td><td>364</td><td>18.0%</td><td>301 / 355</td><td class="pos">(54)</td><td class="neg">-50</td></tr>
+    </tbody></table></div>
+    <p class="cap">₹ crore. EBITDA = operating profit before depreciation. PAT = net profit. FCF = free cash flow (cash left after running the business and investing). Net cash shown in brackets. Source: Neuland reported financials.</p>
+  </div>
+  <div class="card"><h3>Free cash flow vs net debt (₹ cr)</h3><div class="chartbox"><canvas id="cCash"></canvas></div><p class="cap">Net debt below zero means the company holds more cash than borrowings.</p></div>
+  <div class="grid g3">
+    <div class="card"><h3>Growth reset</h3><p>Revenue went from ₹951 cr (FY22) to ₹1,559 cr (FY24), fell 5.2% in FY25, then grew 37.0% in FY26. Margin followed: 29.7% → 21.9% → 28.4%.</p></div>
+    <div class="card"><h3>Cash &amp; investment</h3><p>Net debt in FY22–23 turned to net cash from FY24. In FY26, capex of ₹398 cr pushed free cash flow to −₹50 cr as investment stepped up.</p></div>
+    <div class="card"><h3>Returns (ROCE)</h3><p>Return on capital was 30.1% in FY24, 21.1% in FY25 and 23.6% in FY26. New plants may add capital before they run at full use.</p></div>
+  </div>
+</section>
+
+<!-- QUARTERLY -->
+<section class="panel" id="quarterly">
+  <div class="phead"><h2>Quarterly swings</h2><p class="sub">Why annual comparisons matter more than any single quarter.</p></div>
+  <div class="callout">Q4 FY26 had exceptionally high revenue and margin (₹776 cr, 39.6%); Q1 FY27 was still strong but lower (₹642 cr, 34.7%).</div>
+  <div class="card"><h3>Revenue (₹ cr) and operating margin (%)</h3><div class="chartbox"><canvas id="cQtr"></canvas></div></div>
+  <div class="card"><div class="tw"><table class="narrow">
+    <thead><tr><th>Quarter</th><th>Revenue</th><th>YoY</th><th>EBITDA</th><th>OPM</th><th>PAT</th></tr></thead>
+    <tbody>
+      <tr><td>Q1 FY25</td><td>440</td><td class="pos">+21.1%</td><td>140</td><td>28.1%</td><td>98</td></tr>
+      <tr><td>Q2 FY25</td><td>311</td><td class="neg">-25.6%</td><td>78</td><td>20.0%</td><td>33</td></tr>
+      <tr><td>Q3 FY25</td><td>398</td><td class="pos">+1.3%</td><td>103</td><td>21.8%</td><td>102</td></tr>
+      <tr><td>Q4 FY25</td><td>328</td><td class="neg">-14.7%</td><td>68</td><td>15.6%</td><td>28</td></tr>
+      <tr><td>Q1 FY26</td><td>293</td><td class="neg">-33.4%</td><td>55</td><td>11.8%</td><td>14</td></tr>
+      <tr><td>Q2 FY26</td><td>514</td><td class="pos">+65.5%</td><td>178</td><td>30.2%</td><td>97</td></tr>
+      <tr><td>Q3 FY26</td><td>440</td><td class="pos">+10.5%</td><td>101</td><td>17.5%</td><td>41</td></tr>
+      <tr><td>Q4 FY26</td><td>776</td><td class="pos">+136.4%</td><td>332</td><td>39.6%</td><td>213</td></tr>
+      <tr class="hl"><td>Q1 FY27</td><td>642</td><td class="pos">+119.2%</td><td>249</td><td>34.7%</td><td>148</td></tr>
+    </tbody></table></div>
+    <p class="cap">₹ crore. YoY = change vs same quarter last year. OPM = operating profit margin. Source: Neuland reported financials.</p>
+  </div>
+  <div class="grid g3">
+    <div class="card"><h3>Call figures differ</h3><p>The Q1 FY27 call reported total income ₹650.1 cr, EBITDA ₹231.1 cr and PAT ₹147.4 cr. These are a different reported series from the table (revenue ₹642 cr, EBITDA ₹249 cr) — don't swap one into the other.</p></div>
+    <div class="card"><h3>Why margins were high</h3><p>Management credited spreading fixed costs over more sales (operating leverage), customer mix and partly currency. Long-term target stays 25%+; anything above is a "bonus", not a new floor.</p></div>
+    <div class="card"><h3>Working capital</h3><p>Improved to 84 days from 137 at FY26 end, with a stated focus on turning profit into cash. Given the quarterly swings, still worth tracking.</p></div>
+  </div>
+</section>
+
+<!-- GROWTH -->
+<section class="panel" id="growth">
+  <div class="phead"><h2>Growth plans &amp; new capacity</h2><p class="sub">From the latest concall and September 2026 update.</p></div>
+  <div class="callout">Management's ~20% growth aspiration for FY27 and FY28 is an <b>aspiration, not a firm forecast</b>. A CDMO (contract developer and manufacturer) typically sees about six months of orders ahead.</div>
+  <div class="grid g2">
+    <div class="card"><h3>Order book</h3><p>The CMS order book was described as encouraging, with projects playing out over coming quarters. Customer ordering patterns can still change shipment timing.</p></div>
+    <div class="card"><h3>Development → commercial</h3><p>Development revenue is expected to rise in FY27 and feed commercial revenue from FY28. This is an expectation, not a confirmed schedule for each project.</p></div>
+  </div>
+  <h3 style="margin:18px 0 10px">Peptide capacity — coming online in stages</h3>
+  <div class="grid g2">
+    <div class="card"><h3><span class="tag t-g">Operational</span>Module 1 · 7,000 L</h3><p>First of four planned commercial peptide modules started operations (Sept 2026 update). Qualification, customer production and utilisation still need to progress. Customer interest is converting into better visibility on its use.</p></div>
+    <div class="card"><h3><span class="tag t-a">Planned</span>Module 2 · up to 18,000 L</h3><p>Being configured together with a customer. Further investment will follow customer requirements — no firm start date given.</p></div>
+  </div>
+  <div class="card"><p><b>Beyond obesity drugs:</b> oncology is another early-stage peptide area. Neuland's first peptide API milestone was a FY25 US DMF filing (a regulatory dossier) for Difelikefalin.</p></div>
+  <h3 style="margin:18px 0 10px">Other expansion</h3>
+  <div class="grid g3">
+    <div class="card"><h3>Unit III ramp-up</h3><p>New blocks completed in FY25. By Q3 FY26 ramp-up had started and volumes shipped, but utilisation was still early.</p></div>
+    <div class="card"><h3>Unit I capacity</h3><p>Q1 FY27 approved ₹203 cr of investment, ₹196 cr for strategic growth — mostly Unit I. The next phase will be larger, aimed at newer, more complex modalities.</p></div>
+    <div class="card"><h3>Gland Pharma tie-up</h3><p>August 2026 sterile-API collaboration — an asset-light entry using Gland's sterile facilities rather than building its own. Scale and contribution not yet shown.</p></div>
+  </div>
+</section>
+
+<!-- RISKS -->
+<section class="panel" id="risks">
+  <div class="phead"><h2>Risk &amp; catalyst scorecard</h2><p class="sub">For each area: what could go right, and what has to be proven.</p></div>
+  <div class="score">
+    <div class="srow"><h3>Commercial CMS</h3><div class="sgrid">
+      <div><div class="lab" style="color:var(--green)">Catalyst</div>One expected launch in FY27 and one or two in FY28 could broaden the commercial base.</div>
+      <div><div class="lab" style="color:var(--red)">Risk / proof point</div>A handful of molecules still drive most commercial CMS revenue; shipments can be uneven by quarter.</div></div></div>
+    <div class="srow"><h3>Peptides</h3><div class="sgrid">
+      <div><div class="lab" style="color:var(--green)">Catalyst</div>Module 1 is running, customer interest is improving utilisation visibility, and Module 2 is being configured with a customer.</div>
+      <div><div class="lab" style="color:var(--red)">Risk / proof point</div>Being operational doesn't prove utilisation or returns; further capacity depends on execution and customer needs.</div></div></div>
+    <div class="srow"><h3>New capacity</h3><div class="sgrid">
+      <div><div class="lab" style="color:var(--green)">Catalyst</div>Unit III ramp-up and Unit I expansion could support more production and growth.</div>
+      <div><div class="lab" style="color:var(--red)">Risk / proof point</div>Capex is rising; execution, utilisation and long lead times affect returns. Management cautioned ROCE may dip during expansion.</div></div></div>
+    <div class="srow"><h3>Gland collaboration</h3><div class="sgrid">
+      <div><div class="lab" style="color:var(--green)">Catalyst</div>Asset-light entry into sterile API manufacturing may broaden the product portfolio.</div>
+      <div><div class="lab" style="color:var(--red)">Risk / proof point</div>Scale, timing and economics of future products are not yet established.</div></div></div>
+    <div class="srow"><h3>GDS portfolio</h3><div class="sgrid">
+      <div><div class="lab" style="color:var(--green)">Catalyst</div>Specialty APIs, new filings and products such as Ezetimibe offer growth beyond CMS.</div>
+      <div><div class="lab" style="color:var(--red)">Risk / proof point</div>Mature Prime APIs face more competition; Specialty performance can hinge on individual molecules and markets.</div></div></div>
+    <div class="srow"><h3>Cash conversion</h3><div class="sgrid">
+      <div><div class="lab" style="color:var(--green)">Catalyst</div>Q1 FY27 working-capital days improved to 84, supporting the cash-conversion focus.</div>
+      <div><div class="lab" style="color:var(--red)">Risk / proof point</div>Export exposure, inventory and delivery timing can hit cash flow; Q2 FY26 working capital was 155 days of sales.</div></div></div>
+  </div>
+</section>
+
+<!-- VALUATION -->
+<section class="panel" id="valuation">
+  <div class="phead"><h2>Valuation</h2><p class="sub">Mixed versus its own history; expensive versus operating metrics and the industry.</p></div>
+  <div class="card"><h3>Multiples: current vs history vs industry</h3><div class="chartbox"><canvas id="cVal"></canvas></div></div>
+  <div class="card"><div class="tw"><table class="narrow">
+    <thead><tr><th>Multiple</th><th>Current</th><th>3-yr median</th><th>5-yr median</th><th>Industry</th></tr></thead>
+    <tbody>
+      <tr><td>P/E</td><td>55.2x</td><td>54.6x</td><td>28.8x</td><td>69.1x</td></tr>
+      <tr><td>EV/EBITDA</td><td>36.7x</td><td>42.1x</td><td>42.1x</td><td>24.2x</td></tr>
+      <tr><td>P/B</td><td>14.7x</td><td>12.2x</td><td>12.2x</td><td>3.9x</td></tr>
+    </tbody></table></div>
+    <p class="cap">P/E = price ÷ earnings per share. EV/EBITDA = whole-company value ÷ operating profit. P/B = price ÷ book value. Source: Neuland valuation metrics.</p>
+  </div>
+  <div class="grid g3">
+    <div class="card"><h3>vs own history</h3><p>P/E is near its 3-year median but well above its 5-year median. EV/EBITDA is below both medians; P/B is above both.</p></div>
+    <div class="card"><h3>vs industry</h3><p>P/E is below the industry figure, but EV/EBITDA and P/B are above it. PEG (P/E adjusted for growth) is 1.09; free-cash-flow yield is −0.2%.</p></div>
+    <div class="card"><h3>Investor lens</h3><p>These multiples are not a buy or sell signal. Execution on CMS growth, margins, capex and utilisation will decide whether the valuation holds up.</p></div>
+  </div>
+</section>
+
+<!-- CHART -->
+<section class="panel" id="chart">
+  <div class="phead"><h2>Price chart read</h2><p class="sub">Strong 1-year return, but short-term momentum has weakened.</p></div>
+  <div class="callout blue">The price is above its 100- and 200-day averages after a strong year, but below its 20- and 50-day averages, with weak momentum readings. That describes a near-term pullback within a stronger longer-term rise — not investment advice.</div>
+  <div class="grid g2">
+    <div class="card"><h3>Returns</h3><div class="chartbox" style="height:220px"><canvas id="cRet"></canvas></div></div>
+    <div class="card"><h3>Price ladder (₹)</h3><div class="ladder">
+      <div class="rung"><span class="k">Past turning zone (overhead)</span><span>23,876–23,881</span></div>
+      <div class="rung"><span class="k">20-day average</span><span>22,777</span></div>
+      <div class="rung"><span class="k">50-day average</span><span>21,909</span></div>
+      <div class="rung price"><span class="k">Latest price</span><span>21,435</span></div>
+      <div class="rung"><span class="k">100-day average</span><span>19,758</span></div>
+      <div class="rung"><span class="k">200-day average</span><span>16,882</span></div>
+      <div class="rung"><span class="k">Past turning zone</span><span>16,401–16,585</span></div>
+      <div class="rung"><span class="k">Past turning zone</span><span>15,490–16,025</span></div>
+    </div><p class="cap">Zones are approximate areas where price previously turned or paused — not targets or guaranteed support.</p></div>
+  </div>
+  <div class="card"><div class="tw"><table class="narrow">
+    <thead><tr><th>Indicator</th><th>Reading</th><th>What it says</th></tr></thead>
+    <tbody>
+      <tr><td>Price</td><td>₹21,435</td><td>11.5% below 52-week high</td></tr>
+      <tr><td>Returns</td><td>+53.5% 1Y · +19.3% 3M · −7.6% 1M</td><td>Longer rise, recent pullback</td></tr>
+      <tr><td>20 / 50-day avg</td><td>₹22,777 / ₹21,909</td><td>Price below both</td></tr>
+      <tr><td>100 / 200-day avg</td><td>₹19,758 / ₹16,882</td><td>Price above both</td></tr>
+      <tr><td>RSI / ADX</td><td>37.8 / 19</td><td>Weak recent momentum; modest trend strength</td></tr>
+      <tr><td>MACD / signal</td><td>−80.36 / 177.95</td><td>MACD below signal line</td></tr>
+    </tbody></table></div>
+    <p class="cap">RSI = momentum gauge (below 40 = weak). ADX = trend strength. MACD = trend-momentum crossover. Indicators describe past price behaviour, not future performance.</p>
+  </div>
+</section>
+
+</main>
+<footer>Dashboard view of the supplied Neuland Laboratories deep-dive report. No figures added beyond the report. For education only — not investment advice.</footer>
+
+<script>
+var C = {accent:"#f0a500", muted:"#8a94a6", grid:"#17233b", red:"#ff5964", green:"#37d39b", blue:"#5aa9ff", purple:"#b48cff"};
+Chart.defaults.color = C.muted;
+Chart.defaults.font.family = "JetBrains Mono, monospace";
+Chart.defaults.font.size = 11;
+Chart.defaults.borderColor = C.grid;
+Chart.defaults.maintainAspectRatio = false;
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+
+var drawn = {};
+var builders = {
+  annual: function () {
+    new Chart(document.getElementById("cAnnual"), {
+      type: "bar",
+      data: {
+        labels: ["FY22","FY23","FY24","FY25","FY26"],
+        datasets: [
+          {type:"bar", label:"Revenue", data:[951,1191,1559,1477,2023], backgroundColor:"rgba(240,165,0,.75)", yAxisID:"y", order:2},
+          {type:"bar", label:"EBITDA", data:[192,325,522,389,666], backgroundColor:"rgba(90,169,255,.65)", yAxisID:"y", order:2},
+          {type:"line", label:"EBITDA margin %", data:[15.0,22.8,29.7,21.9,28.4], borderColor:C.green, backgroundColor:C.green, yAxisID:"y1", tension:.3, order:1}
+        ]
+      },
+      options: {scales:{y:{grid:{color:C.grid}}, y1:{position:"right", grid:{display:false}, ticks:{callback:function(v){return v+"%";}}}, x:{grid:{display:false}}}}
+    });
+    new Chart(document.getElementById("cCash"), {
+      type: "bar",
+      data: {
+        labels: ["FY22","FY23","FY24","FY25","FY26"],
+        datasets: [
+          {label:"Free cash flow", data:[-37,173,119,112,-50], backgroundColor:[C.red,C.green,C.green,C.green,C.red]},
+          {label:"Net debt (neg = net cash)", data:[220,69,-21,-102,-54], backgroundColor:"rgba(180,140,255,.6)"}
+        ]
+      },
+      options: {scales:{y:{grid:{color:C.grid}}, x:{grid:{display:false}}}}
+    });
+  },
+  quarterly: function () {
+    new Chart(document.getElementById("cQtr"), {
+      type: "bar",
+      data: {
+        labels: ["Q1 FY25","Q2 FY25","Q3 FY25","Q4 FY25","Q1 FY26","Q2 FY26","Q3 FY26","Q4 FY26","Q1 FY27"],
+        datasets: [
+          {type:"bar", label:"Revenue", data:[440,311,398,328,293,514,440,776,642], backgroundColor:"rgba(240,165,0,.75)", yAxisID:"y", order:2},
+          {type:"bar", label:"PAT", data:[98,33,102,28,14,97,41,213,148], backgroundColor:"rgba(90,169,255,.6)", yAxisID:"y", order:2},
+          {type:"line", label:"OPM %", data:[28.1,20.0,21.8,15.6,11.8,30.2,17.5,39.6,34.7], borderColor:C.green, backgroundColor:C.green, yAxisID:"y1", tension:.3, order:1}
+        ]
+      },
+      options: {scales:{y:{grid:{color:C.grid}}, y1:{position:"right", grid:{display:false}, ticks:{callback:function(v){return v+"%";}}}, x:{grid:{display:false}}}}
+    });
+  },
+  valuation: function () {
+    new Chart(document.getElementById("cVal"), {
+      type: "bar",
+      data: {
+        labels: ["P/E","EV/EBITDA","P/B"],
+        datasets: [
+          {label:"Current", data:[55.2,36.7,14.7], backgroundColor:C.accent},
+          {label:"3-yr median", data:[54.6,42.1,12.2], backgroundColor:"rgba(90,169,255,.7)"},
+          {label:"5-yr median", data:[28.8,42.1,12.2], backgroundColor:"rgba(180,140,255,.7)"},
+          {label:"Industry", data:[69.1,24.2,3.9], backgroundColor:"rgba(138,148,166,.6)"}
+        ]
+      },
+      options: {scales:{y:{grid:{color:C.grid}, ticks:{callback:function(v){return v+"x";}}}, x:{grid:{display:false}}}}
+    });
+  },
+  chart: function () {
+    new Chart(document.getElementById("cRet"), {
+      type: "bar",
+      data: {labels:["1 year","3 months","1 month"], datasets:[{label:"Return %", data:[53.5,19.3,-7.6], backgroundColor:[C.green,C.green,C.red]}]},
+      options: {indexAxis:"y", plugins:{legend:{display:false}}, scales:{x:{grid:{color:C.grid}, ticks:{callback:function(v){return v+"%";}}}, y:{grid:{display:false}}}}
+    });
+  }
+};
+
+function showTab(id) {
+  var tabs = document.querySelectorAll(".tab");
+  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.toggle("active", tabs[i].getAttribute("data-t") === id); }
+  var panels = document.querySelectorAll(".panel");
+  for (var j = 0; j < panels.length; j++) { panels[j].classList.toggle("active", panels[j].id === id); }
+  var btn = document.querySelector('.tab[data-t="' + id + '"]');
+  if (btn) { btn.scrollIntoView({inline:"center", block:"nearest", behavior:"smooth"}); }
+  window.scrollTo({top:0, behavior:"smooth"});
+  if (builders[id] && !drawn[id] && window.Chart) { drawn[id] = true; builders[id](); }
+}
+
+document.getElementById("tabs").addEventListener("click", function (e) {
+  var t = e.target.closest(".tab");
+  if (t) { showTab(t.getAttribute("data-t")); }
+});
+</script>
+</body>
+</html>
